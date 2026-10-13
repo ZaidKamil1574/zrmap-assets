@@ -1689,6 +1689,231 @@ function setupLawyer(g){
 
 
 /* ------------------------------------------------------------------ */
+/* Offline mode: prepared answers, no AI calls                         */
+/* Used on mzaidk.com when there is no live AI. Inside Claude the page */
+/* still uses real AI. Content comes from Younessi Law's public pages  */
+/* plus general California information, never legal advice.            */
+/* ------------------------------------------------------------------ */
+const OFF_NOTE = 'Prepared answer from Younessi Law\'s published information. General information only, not legal advice.';
+const CALL = { label:'Call Younessi Law', note:'(844) 777-7777 or info@younessilaw.com' };
+const S = (kind, title, items, line, extra) => ({ spec:Object.assign({ kind, title, items, color:RED }, extra || {}), line });
+const step = (n, sub, note) => ({ label:String(n), sub, note });
+const OFFLINE = {
+  employment: [
+    { q:'I was fired a week after reporting harassment. What are my options?', keys:['fired','terminated','termination','let go','report','reported','retaliat','harass','complain'],
+      text:'Being fired soon after reporting harassment can point to retaliation or wrongful termination, two of the claims Younessi Law handles for employees. Write down what happened, keep every message and document, and talk to a Younessi Law attorney soon, because time limits apply.',
+      scenes:[
+        S('steps', 'What you can do now', [step(1, 'Write it down', 'Dates, names, what was said'), step(2, 'Save evidence', 'Emails, texts, reviews, letters'), step(3, 'Keep pay records', 'Stubs and final paycheck'), step(4, 'Call the firm', '(844) 777-7777')], 'Start by writing down what happened and saving every record you have.'),
+        S('cards', 'Claims that may apply', [{ label:'Retaliation', note:'Fired after raising a legitimate concern' }, { label:'Wrongful termination', note:'Firing for a protected complaint' }, { label:'Sexual harassment', note:'The conduct you reported' }, { label:'Hostile workplace', note:'Ongoing harassment at work' }], 'These are the employment claims that may fit what you described.'),
+        S('compare', 'Why timing matters', [{ label:'Before', a:'Clean record', b:'Reported harassment' }, { label:'After', a:'Fired one week later', b:'Reason given by employer' }, { label:'Question', a:'Was the report the cause?', b:'An attorney will compare both' }], 'A short gap between a complaint and a firing is one thing an attorney looks at closely.', { columns:['Timeline','What it shows'] }) ] },
+    { q:'Do you handle unpaid overtime and wage claims?', keys:['overtime','wage','wages','paid','pay','paycheck','hours','minimum','straight time','break','class action'],
+      text:'Yes. Wage and hour cases are one of Younessi Law\'s main employment areas, including unpaid or improperly paid overtime. The firm says it has represented thousands of employees in individual and class action cases.',
+      scenes:[
+        S('overview', 'Wage and hour claims', [{ label:'Covers', value:'Unpaid overtime' }, { label:'Cases', value:'Individual, class' }, { label:'Phone', value:'(844) 777-7777' }], 'Yes, the firm handles wage and hour claims, including unpaid overtime.', { mark:'$', tagline:'Unrealistic demands, unlivable wages, unpaid overtime' }),
+        S('cards', 'Common wage problems', [{ label:'Unpaid overtime', note:'Extra hours paid at straight time or not at all' }, { label:'Late wages', note:'Paychecks that arrive late' }, { label:'Misclassification', note:'Called a contractor to avoid benefits' }, { label:'Breach of contract', note:'Agreed pay terms not honored' }], 'These are the wage problems the firm lists on its site.'),
+        S('steps', 'Records to gather', [step(1, 'Pay stubs', 'Show hours and rates'), step(2, 'Your own hour log', 'Dates and shifts worked'), step(3, 'Offer letter', 'Agreed pay terms'), step(4, 'Messages', 'Requests to work extra')], 'Gather pay stubs and any record of the hours you actually worked.') ] },
+    { q:'What counts as a hostile workplace?', keys:['hostile','toxic','bully','bullied','abuse','yell','environment','mocked','mock'],
+      text:'Younessi Law describes a hostile workplace as ongoing hostility or harassment that puts your emotional or physical well-being at risk. It is usually about a pattern of conduct, often tied to a protected trait, rather than a single rude comment.',
+      scenes:[
+        S('cards', 'Signs of a hostile workplace', [{ label:'It keeps happening', note:'A pattern, not one bad day' }, { label:'It targets who you are', note:'Gender, race, age, disability, religion' }, { label:'It affects your work', note:'Fear, stress, or harm on the job' }, { label:'Nobody stops it', note:'Complaints go nowhere' }], 'A hostile workplace usually means ongoing conduct that affects your well-being.'),
+        S('compare', 'Rude boss or hostile workplace?', [{ label:'How often', a:'Once in a while', b:'Repeated, ongoing' }, { label:'Why', a:'General bad mood', b:'Tied to a protected trait' }, { label:'Effect', a:'Annoying', b:'Harms well-being or work' }], 'The difference is usually how often it happens and why.', { columns:['Ordinary conflict','Hostile workplace'] }),
+        S('steps', 'What to do', [step(1, 'Keep a log', 'Dates, words, witnesses'), step(2, 'Report it', 'In writing to HR'), step(3, 'Save replies', 'Keep copies at home'), step(4, 'Get advice', '(844) 777-7777')], 'Keep a written log and report it in writing.') ] },
+    { keys:['discriminat','race','gender','age','religion','disability','pregnan','orientation','ethnic'], text:'Younessi Law handles discrimination claims for unfair treatment based on race, ethnicity, gender, sexual orientation, age, disability, or religion.',
+      scenes:[ S('cards', 'Discrimination claims', [{ label:'Race and ethnicity', note:'Unfair treatment because of who you are' }, { label:'Gender and orientation', note:'Including pregnancy-related treatment' }, { label:'Age', note:'Pushed out or passed over for age' }, { label:'Disability', note:'Treated worse because of a disability' }, { label:'Religion', note:'Penalized for beliefs or practices' }, { label:'Glass ceiling', note:'Repeatedly passed over for promotions' }], 'These are the kinds of discrimination the firm lists.') ] },
+    { keys:['contractor','1099','misclass','classified','gig','freelance','benefits'], text:'Being labeled an independent contractor to avoid giving employee benefits is a misclassification issue, which Younessi Law lists under employee status claims.',
+      scenes:[ S('compare', 'Employee or contractor?', [{ label:'Control', a:'Employer sets hours and methods', b:'You set your own' }, { label:'Business', a:'Core part of their business', b:'Your own separate business' }, { label:'Benefits', a:'Overtime, breaks, insurance', b:'Usually none' }], 'If your employer controls how you work, you may be an employee.', { columns:['Employee','Contractor'] }) ] },
+  ],
+  workers: [
+    { q:'I hurt my back lifting boxes at work. What benefits could apply?', keys:['hurt','injur','back','lift','lifting','benefit','medical','lost wages','accident at work'],
+      text:'An injury from lifting at work can be covered by workers\' compensation, which Younessi Law says helps injured workers get medical care and lost wages. Report the injury to your employer right away and see a doctor.',
+      scenes:[
+        S('cards', 'Benefits that may apply', [{ label:'Medical care', note:'Treatment for the work injury' }, { label:'Lost wages', note:'Pay while you cannot work' }, { label:'Permanent disability', note:'If recovery stalls for good' }, { label:'Repetitive strain', note:'Injuries from heavy lifting over time' }], 'Workers\' comp can cover medical care and lost wages.'),
+        S('steps', 'What to do now', [step(1, 'Tell your employer', 'In writing, generally within 30 days'), step(2, 'See a doctor', 'Say it happened at work'), step(3, 'File the claim form', 'Ask for the DWC-1'), step(4, 'Call the firm', '(844) 777-7777')], 'Tell your employer in writing and get medical care.'),
+        S('flow', 'How a claim usually moves', [{ label:'Injury', note:'Reported to employer' }, { label:'Claim filed', note:'Claim form submitted' }, { label:'Treatment', note:'Medical care' }, { label:'Benefits', note:'Wages and disability' }], 'This is how a typical claim moves forward.') ] },
+    { q:'Can I refuse work that is unsafe?', keys:['unsafe','refuse','danger','dangerous','safety','equipment','hazard','osha'],
+      text:'Younessi Law\'s site says that when conditions seriously threaten your health or safety, employers must address the cause, and workers may refuse unsafe work and file a complaint.',
+      scenes:[
+        S('cards', 'Unsafe work environment', [{ label:'Serious threat', note:'Conditions that endanger health or safety' }, { label:'Employer must act', note:'They have to address the cause' }, { label:'You may refuse', note:'Unsafe work can be refused' }, { label:'File a complaint', note:'You can report the conditions' }], 'You may be able to refuse work that seriously threatens your safety.'),
+        S('steps', 'Protect yourself', [step(1, 'Report it in writing', 'Describe the hazard'), step(2, 'Take photos', 'If it is safe to do so'), step(3, 'Keep copies', 'Of every report'), step(4, 'Get advice', '(844) 777-7777')], 'Report the hazard in writing and keep copies.') ] },
+    { q:'My doctor says my injury is permanent. What now?', keys:['permanent','disab','stalled','not getting better','rating','long term'],
+      text:'When recovery stalls and a doctor confirms the injury is permanent, permanent disability benefits may be available. If you also had a disability before the work injury, SIBTF benefits may apply too.',
+      scenes:[
+        S('flow', 'From injury to disability benefits', [{ label:'Work injury', note:'Claim filed' }, { label:'Treatment', note:'Recovery stalls' }, { label:'Doctor confirms', note:'Injury is permanent' }, { label:'Benefits', note:'Permanent disability' }], 'Once a doctor confirms the injury is permanent, disability benefits may follow.'),
+        S('cards', 'Ask about these', [{ label:'Permanent disability', note:'Benefits when recovery stalls' }, { label:'SIBTF', note:'Extra benefits with a prior disability' }, { label:'Medical care', note:'Ongoing treatment needs' }, CALL], 'Ask an attorney about permanent disability and SIBTF.') ] },
+    { keys:['construction','scaffold','fall from','machinery','site'], text:'Construction injuries, especially those involving heights or machinery, may qualify for workers\' compensation, particularly when the site did not follow safety rules.',
+      scenes:[ S('cards', 'Construction accidents', [{ label:'Falls from heights', note:'Ladders, scaffolds, roofs' }, { label:'Machinery', note:'Equipment and tool injuries' }, { label:'Unsafe sites', note:'Safety protocols not followed' }, CALL], 'Construction injuries can qualify for workers\' comp.') ] },
+    { keys:['death','died','killed','family','funeral','spouse'], text:'For a workplace death, Younessi Law\'s team leads the claim so the family can focus on recovery. Compensation may cover lost family income, funeral costs, lost inheritance, and other expenses.',
+      scenes:[ S('cards', 'Workplace death claims', [{ label:'Lost family income', note:'Support the worker provided' }, { label:'Funeral costs', note:'Burial and service expenses' }, { label:'Lost inheritance', note:'What the family would have received' }, CALL], 'The firm handles workplace death claims for families.') ] },
+    { keys:['chemical','exposure','toxic','disease','asbestos','fumes','illness'], text:'Illness from harmful substances at work, from short or long exposure, is an occupational disease claim. Employers must provide the safety equipment needed.',
+      scenes:[ S('cards', 'Occupational disease', [{ label:'Short exposure', note:'A single harmful incident' }, { label:'Long exposure', note:'Illness that builds over time' }, { label:'Safety gear', note:'Employers must provide it' }, CALL], 'Illness from workplace exposure can be a workers\' comp claim.') ] },
+  ],
+  injury: [
+    { q:'I was rear-ended on the freeway. What should I do next?', keys:['rear','car','crash','accident','collision','freeway','driver','truck','hit'],
+      text:'Car accidents caused by another driver\'s negligence are one of Younessi Law\'s personal injury areas, and the firm offers a free assessment for car accident cases. Get medical care first, then document everything.',
+      scenes:[
+        S('steps', 'After a rear-end crash', [step(1, 'Get medical care', 'Some injuries show up later'), step(2, 'Document the scene', 'Photos, plates, damage'), step(3, 'Swap information', 'Insurance and contacts'), step(4, 'Free assessment', '(844) 777-7777')], 'Get checked by a doctor, then document the scene.'),
+        S('cards', 'Keep these records', [{ label:'Police report', note:'Report number and officer' }, { label:'Medical records', note:'Every visit and bill' }, { label:'Repair estimates', note:'Damage to your car' }, { label:'Missed work', note:'Dates and lost pay' }], 'Keep the police report, medical bills, and proof of missed work.'),
+        S('overview', 'Car accident cases', [{ label:'Assessment', value:'Free' }, { label:'Cause', value:'Driver or road' }, { label:'Phone', value:'(844) 777-7777' }], 'Younessi Law offers a free assessment for car accidents.', { mark:'PI', tagline:'Another driver\'s negligence or road design' }) ] },
+    { q:'Do you take slip and fall cases?', keys:['slip','trip','fall','fell','floor','stairs','mall','store','sidewalk'],
+      text:'Yes. Younessi Law lists slip, trip and fall cases at malls, homes, offices, city streets, and on buses, and focuses on what caused the fall.',
+      scenes:[
+        S('cards', 'Where falls happen', [{ label:'Malls and stores', note:'Wet floors, clutter' }, { label:'Homes', note:'Unsafe stairs or lighting' }, { label:'Offices', note:'Hazards at work sites' }, { label:'Streets', note:'Broken city sidewalks' }, { label:'Buses', note:'Falls on public transit' }], 'The firm handles falls in many kinds of places.'),
+        S('steps', 'What helps a fall case', [step(1, 'Photograph the hazard', 'Before it is fixed'), step(2, 'Report it', 'To the owner or manager'), step(3, 'Find witnesses', 'Names and numbers'), step(4, 'See a doctor', 'Keep the records')], 'Photograph what caused the fall and report it right away.') ] },
+    { q:'What is a product liability claim?', keys:['product','defect','defective','recall','manufacturer','device','faulty'],
+      text:'A product liability claim covers injuries or financial strain caused by a defective product. Younessi Law says manufacturers and resellers can be held accountable.',
+      scenes:[
+        S('flow', 'How product liability works', [{ label:'Defect', note:'Design, build, or warning' }, { label:'Injury', note:'Harm while used normally' }, { label:'Responsibility', note:'Maker or reseller' }, { label:'Claim', note:'Compensation for harm' }], 'A defective product that causes harm can lead to a claim against the maker or seller.'),
+        S('steps', 'Keep the evidence', [step(1, 'Keep the product', 'Do not repair or toss it'), step(2, 'Save the receipt', 'And the packaging'), step(3, 'Photograph injuries', 'And the defect'), step(4, 'Call the firm', '(844) 777-7777')], 'Keep the product and its packaging.') ] },
+    { keys:['medical','doctor','hospital','surgery','misdiagnos','malpractice','medication','birth'], text:'Younessi Law handles medical error cases where a healthcare worker falls below the standard of care, including misdiagnosis, birth injuries, plastic surgery errors, and medication errors.',
+      scenes:[ S('cards', 'Medical errors', [{ label:'Misdiagnosis', note:'Wrong or missed diagnosis' }, { label:'Birth injuries', note:'Including cerebral palsy' }, { label:'Medication errors', note:'Wrong drug or dose' }, { label:'Surgery errors', note:'Including plastic surgery' }, { label:'Spinal cord injury', note:'From negligent care' }], 'These are the medical error cases the firm lists.') ] },
+    { keys:['nursing','elder','elderly','care home','neglect','grandmother','grandfather','parent'], text:'Neglect or mistreatment of elderly or disabled residents is nursing home abuse. Younessi Law urges families to act immediately if they suspect it.',
+      scenes:[ S('steps', 'If you suspect nursing home abuse', [step(1, 'Act right away', 'Do not wait'), step(2, 'Document signs', 'Injuries, weight loss, fear'), step(3, 'Report it', 'To the facility and state'), step(4, 'Call the firm', '(844) 777-7777')], 'If you suspect abuse, act right away.') ] },
+    { keys:['wrongful death','died','death','killed','passed away'], text:'Younessi Law handles wrongful death cases caused by malpractice, job accidents, or other fatal negligence.',
+      scenes:[ S('cards', 'Wrongful death', [{ label:'Malpractice', note:'Fatal medical negligence' }, { label:'Job accidents', note:'Deaths at work' }, { label:'Other negligence', note:'Crashes and more' }, CALL], 'The firm handles wrongful death claims for families.') ] },
+  ],
+  wildfire: [
+    { q:'My house was damaged in the Eaton fire. Is there a deadline?', keys:['eaton','palisades','fire','deadline','burn','burned','house','home','damage','smoke','hurst'],
+      text:'Younessi Law says wildfire claims are time-sensitive and urges people to act quickly. Insurance policies set their own deadlines, and some can be as short as a year, with extensions in some declared disasters. Check your policy and confirm every date with an attorney.',
+      scenes:[
+        S('steps', 'Act quickly', [step(1, 'Read your policy', 'Find the claim deadline'), step(2, 'Notify your insurer', 'In writing, keep a copy'), step(3, 'Document the loss', 'Photos and an item list'), step(4, 'Free consultation', '(844) 777-7777')], 'Find the deadline in your policy and notify your insurer in writing.'),
+        S('cards', 'Fires named on the firm\'s site', [{ label:'Palisades and Eaton', note:'Los Angeles area fires' }, { label:'Hurst and Lidia', note:'Also listed' }, { label:'Sunset and Archer', note:'Also listed' }, { label:'Creek, Kenneth and more', note:'Woodley and Hughes too' }], 'The firm\'s wildfire page names the Eaton fire and others.'),
+        S('overview', 'Wildfire damage', [{ label:'Fee', value:'No recovery, no fee' }, { label:'Since', value:'1994 Northridge' }, { label:'Consultation', value:'Free' }], 'The firm works on a no recovery, no fee basis for wildfire cases.', { mark:'WD', tagline:'Fire insurance claims and disputes for homes and businesses' }) ] },
+    { q:'What does "no recovery, no fee" mean?', keys:['fee','fees','cost','pay','charge','no recovery','contingency','afford','free'],
+      text:'On its wildfire page, Younessi Law states "no recovery, no fee," which generally means you do not pay attorney fees unless money is recovered for you. Ask the firm for the exact terms in writing.',
+      scenes:[
+        S('compare', 'No recovery, no fee', [{ label:'Recovery', a:'Fee comes from it', b:'No attorney fee' }, { label:'Upfront', a:'Nothing to pay to start', b:'Nothing to pay to start' }, { label:'Terms', a:'Get them in writing', b:'Ask at consultation' }], 'Generally you pay attorney fees only if money is recovered for you.', { columns:['If money is recovered','If nothing is recovered'] }),
+        S('cards', 'Ask at the consultation', [{ label:'Fee percentage', note:'How the fee is calculated' }, { label:'Costs', note:'Who covers case expenses' }, { label:'Timeline', note:'How long cases take' }, CALL], 'Ask about the fee percentage and case costs.') ] },
+    { q:'My insurer is underpaying my claim. Can you help?', keys:['insurer','insurance','underpa','denied','lowball','adjuster','claim','dispute','offer'],
+      text:'Yes. Younessi Law handles fire-related insurance claims and disputes for homeowners and business owners, and has helped disaster victims with insurance disputes since the 1994 Northridge earthquake.',
+      scenes:[
+        S('steps', 'When the offer seems low', [step(1, 'Get it in writing', 'The offer and the reasons'), step(2, 'Get your own estimate', 'Contractor or appraiser'), step(3, 'Keep a log', 'Every call and letter'), step(4, 'Call the firm', '(844) 777-7777')], 'Ask for the offer and reasons in writing, and get your own estimate.'),
+        S('cards', 'What the firm handles', [{ label:'Homeowner claims', note:'Fire losses to homes' }, { label:'Business claims', note:'Losses to business owners' }, { label:'Insurance disputes', note:'Underpaid or denied claims' }, { label:'Since 1994', note:'Helping disaster victims' }], 'The firm handles fire insurance disputes for homes and businesses.') ] },
+  ],
+  sibtf: [
+    { q:'Am I eligible for SIBTF benefits?', keys:['eligib','qualify','sibtf','subsequent','trust fund','who can'],
+      text:'SIBTF (the Subsequent Injuries Benefits Trust Fund) can pay extra compensation to people who had a disability before a work injury. In California, eligibility generally depends on how serious the combined disability is, so an attorney needs to review your ratings.',
+      scenes:[
+        S('flow', 'How SIBTF works', [{ label:'Prior disability', note:'Before the work injury' }, { label:'Work injury', note:'A later job injury' }, { label:'Combined', note:'Both together are serious' }, { label:'SIBTF', note:'Extra compensation' }], 'SIBTF adds compensation when a work injury combines with a prior disability.'),
+        S('cards', 'What an attorney checks', [{ label:'Prior disability', note:'Records from before the injury' }, { label:'Work injury rating', note:'Your workers\' comp rating' }, { label:'Combined level', note:'California sets minimum levels' }, CALL], 'An attorney checks your prior records and your ratings.') ] },
+    { q:'My workers\' comp case already closed. Can I still file?', keys:['closed','settled','already','finished','over','after'],
+      text:'Younessi Law says you may still qualify for SIBTF after your workers\' compensation case is closed, and that benefits may be lifelong. Contact the firm to check eligibility.',
+      scenes:[
+        S('overview', 'Closed case, still eligible?', [{ label:'Closed case', value:'May still qualify' }, { label:'Benefits', value:'May be lifelong' }, { label:'Phone', value:'(844) 777-7777' }], 'You may still qualify after your case is closed.', { mark:'SB', tagline:'Pre-existing disability plus a work injury' }),
+        S('steps', 'What to gather', [step(1, 'Settlement papers', 'From your comp case'), step(2, 'Medical records', 'Before and after the injury'), step(3, 'Disability ratings', 'Any rating reports'), step(4, 'Check eligibility', '(844) 777-7777')], 'Gather your settlement papers and medical records.') ] },
+    { q:'What counts as a pre-existing disability?', keys:['pre-existing','preexisting','prior','before','condition','existing'],
+      text:'Generally, a pre-existing disability is a condition you already had before the work injury, such as an earlier injury or a chronic condition that limited you. An attorney decides whether yours counts for SIBTF.',
+      scenes:[
+        S('cards', 'Possible prior disabilities', [{ label:'Earlier injuries', note:'From a past job or accident' }, { label:'Chronic conditions', note:'That limited what you could do' }, { label:'Vision or hearing', note:'Loss before the work injury' }, { label:'Prior surgeries', note:'That left lasting limits' }], 'A prior disability is a condition you had before the work injury.'),
+        S('steps', 'Show it with records', [step(1, 'Medical history', 'Records before the injury'), step(2, 'Prior claims', 'Earlier comp or disability'), step(3, 'Work limits', 'What you could not do'), step(4, 'Ask the firm', '(844) 777-7777')], 'Medical records from before the injury help show it.') ] },
+  ],
+  general: [
+    { q:'What practice areas does Younessi Law handle?', keys:['practice','areas','handle','services','types','what do you do','cases do you'],
+      text:'Younessi Law handles Employment Law, Workers\' Compensation, Personal Injury, Wildfire Damage, and SIBTF claims in Los Angeles.',
+      scenes:[ S('cards', 'Practice areas', AREAS.map(a => ({ label:a.name, note:a.blurb })), 'Younessi Law has five practice areas.') ] },
+    { q:'How do I set up a consultation?', keys:['consult','contact','appointment','call','phone','email','reach','talk to','lawyer','attorney','meet'],
+      text:'Call Younessi Law at (844) 777-7777, email info@younessilaw.com, or use the contact form on the firm\'s website. The office is at 3435 Wilshire Blvd., Suite 2200, Los Angeles, CA 90010.',
+      scenes:[
+        S('overview', 'Contact Younessi Law', [{ label:'Phone', value:'(844) 777-7777' }, { label:'Email', value:'info@younessilaw.com' }, { label:'Office', value:'Wilshire Blvd, LA' }], 'Call (844) 777-7777 to reach the firm.', { mark:'YL', tagline:'3435 Wilshire Blvd., Suite 2200, Los Angeles, CA 90010' }),
+        S('steps', 'Before you call', [step(1, 'Pick the case type', 'Use the plaques here'), step(2, 'Gather documents', 'Letters, records, photos'), step(3, 'List key dates', 'When things happened'), step(4, 'Call', '(844) 777-7777')], 'Have your documents and key dates ready when you call.') ] },
+    { keys:['spanish','español','espanol','language','languages'], text:'Yes. Younessi Law\'s website has Spanish pages for workers\' compensation, employment law, personal injury, truck accidents, and contact.',
+      scenes:[ S('cards', 'Spanish pages on the site', [{ label:'Compensación laboral', note:'Workers\' compensation' }, { label:'Derecho laboral', note:'Employment law' }, { label:'Lesiones personales', note:'Personal injury' }, { label:'Accidentes con camiones', note:'Truck accidents' }], 'The firm\'s site has Spanish pages.') ] },
+    { keys:['where','office','located','address','location','wilshire'], text:'Younessi Law\'s office is at 3435 Wilshire Blvd., Suite 2200, Los Angeles, CA 90010. The site does not list office hours.',
+      scenes:[ S('overview', 'Office location', [{ label:'Address', value:'3435 Wilshire Blvd' }, { label:'Suite', value:'2200' }, { label:'City', value:'Los Angeles 90010' }], 'The office is on Wilshire Boulevard in Los Angeles.', { mark:'YL', tagline:'Office hours are not listed on the site' }) ] },
+    { keys:['history','how long','years','experience','founded','ramin','who runs'], text:'Younessi Law advertises 32 years of excellence. The firm is led by founder Ramin Younessi and has helped disaster victims since the 1994 Northridge earthquake.',
+      scenes:[ S('overview', 'About the firm', [{ label:'Experience', value:'32 years' }, { label:'Founder', value:'Ramin Younessi' }, { label:'Since', value:'1994 Northridge' }], 'Younessi Law advertises 32 years of excellence.', { mark:'YL', tagline:'Supporting the working class in Los Angeles' }) ] },
+    { q:'Who built this demo and why?', keys:['who built','who made','built this','zaid','demo','why should','hire','engineer','candidate'],
+      text:'Zaid Kamil built this concept demo for his application to the Senior AI Systems Engineer, On-Premise AI role. It is not affiliated with Younessi Law.',
+      scenes:[
+        S('overview', 'Zaid Kamil', [{ label:'Based in', value:'Los Angeles' }, { label:'Experience', value:'6+ years' }, { label:'Degree', value:'M.S. CS, 3.90' }], 'Zaid Kamil built this demo for the Senior AI Systems Engineer role.', { mark:'ZK', tagline:'On-premise AI, GPU systems, and Linux administration' }),
+        S('cards', 'Why he fits', [{ label:'On-prem AI', note:'GPU 3D reconstruction at Dinex' }, { label:'Sysadmin', note:'Linux and 150+ endpoints at Cal State' }, { label:'Security', note:'Least privilege, backups, hardening' }, { label:'Local LLMs', note:'RAG avatar on RTX 5090 servers' }], 'He has run on-prem GPU work, Linux servers, and local AI.') ] },
+  ],
+};
+
+/* Prepared results for the fictional sample case (Exhibit A) */
+const SAMPLE_TOOLS = {
+  summary: { headline:'Warehouse worker fired after reporting injury', summary:'Client A hurt their lower back lifting a 60 lb carton on March 2, 2026, asked for light duty, and complained in writing about being mocked. They were fired 18 days after the injury for "attendance", and also report overtime paid at straight time.',
+    key_facts:[{ label:'Back injury at work', note:'Lifted a 60 lb carton on 2026-03-02, reported verbally that day (Ex. A)' }, { label:'Accommodation request', note:'Emailed HR on 2026-03-05 for a 10 lb lifting limit (Ex. A)' }, { label:'Light duty denied', note:'HR said none available, told to use PTO on 2026-03-09 (Ex. A)' }, { label:'Written complaint', note:'Reported on 2026-03-16 that the shift lead mocked the injury (Ex. A)' }, { label:'Terminated', note:'Fired 2026-03-20 for "attendance" after clean reviews (Ex. A)' }, { label:'Overtime pay', note:'Six months of overtime paid at straight time, has stubs (Ex. A)' }],
+    possible_claims:[{ label:'Workers\' compensation', note:'Back injury while lifting at work: medical care and lost wages' }, { label:'Retaliation', note:'Fired days after an injury report, accommodation request, and complaint' }, { label:'Disability accommodation', note:'Light duty denied despite a doctor\'s restriction' }, { label:'Wage and hour', note:'Overtime allegedly paid at straight time' }],
+    next_steps:[{ label:'Collect documents', note:'Urgent care note, HR emails, stubs' }, { label:'Confirm comp claim', note:'Was a claim form filed?' }, { label:'List witnesses', note:'Coworkers who saw the mocking' }, { label:'Book a consultation', note:'Call (844) 777-7777' }] },
+  details: { parties:[{ name:'Client A', role:'Warehouse associate, 3 years' }, { name:'Distribution Co.', role:'Employer (fictional)' }, { name:'Shift lead', role:'Got the report, alleged mocking' }, { name:'HR department', role:'Denied light duty' }],
+    chronology:[{ date:'2026-03-02', event:'Back injury lifting carton', source:'Ex. A' }, { date:'2026-03-05', event:'Asked HR for light duty', source:'Ex. A' }, { date:'2026-03-09', event:'Light duty denied', source:'Ex. A' }, { date:'2026-03-16', event:'Written complaint to HR', source:'Ex. A' }, { date:'2026-03-20', event:'Terminated for attendance', source:'Ex. A' }],
+    evidence:[{ label:'Urgent care note', note:'10 lb lifting limit for two weeks' }, { label:'HR emails', note:'The request and the denial' }, { label:'Two pay stubs', note:'Overtime hours and the rate paid' }, { label:'Termination letter', note:'Gives attendance as the reason' }],
+    damages:[{ label:'Lost wages', note:'Since the firing on 2026-03-20' }, { label:'Unpaid overtime', note:'About six months at straight time' }, { label:'Medical costs', note:'Treatment for the back injury' }],
+    open_questions:[{ label:'Comp claim form', note:'Was a claim form given or filed?' }, { label:'Attendance record', note:'Any absences before the injury?' }, { label:'Witnesses', note:'Who saw the shift lead mock the injury?' }, { label:'Prior reviews', note:'Copies of the "meets expectations" reviews' }] },
+  checklist: { claim:'Retaliation for reporting an injury',
+    elements:[{ element:'Protected activity', status:'supported', note:'Reported injury, asked for light duty, complained (Ex. A)' }, { element:'Adverse action', status:'supported', note:'Terminated on 2026-03-20 (Ex. A)' }, { element:'Causal link', status:'unclear', note:'18 days after injury; employer cites attendance' }, { element:'Stated reason', status:'unclear', note:'Attendance records are not on file yet' }, { element:'Signs of pretext', status:'unclear', note:'Clean reviews and no write-ups (Ex. A)' }, { element:'Damages', status:'supported', note:'Lost wages since the firing (Ex. A)' }],
+    caution:'This is a general checklist. A Younessi Law attorney must confirm which claims apply and what proof is needed.' },
+  deadlines: { deadlines:[{ label:'Report injury to employer', period:'Within 30 days', note:'Reported verbally on 2026-03-02' }, { label:'Workers\' comp claim', period:'Generally 1 year', note:'From the injury on 2026-03-02' }, { label:'CRD complaint', period:'Generally 3 years', note:'From the firing on 2026-03-20' }, { label:'Overtime wage claim', period:'Generally 3 years', note:'Each underpaid paycheck counts separately' }, { label:'Wrongful termination', period:'Often 2 years', note:'From 2026-03-20, depends on the claim' }],
+    caution:'These are general California time limits. Confirm every deadline with a Younessi Law attorney; exceptions apply.' },
+  memo: `DRAFT FOR ATTORNEY REVIEW
+## Client situation
+Client A, a warehouse associate for 3 years at Distribution Co. (fictional), was injured lifting a 60 lb carton and was fired 18 days later. Client wants medical care covered, back pay, and to understand options.
+## Facts (Exhibit A)
+- 2026-03-02: lower back injury lifting a carton, reported verbally to the shift lead
+- 2026-03-05: emailed HR for a 10 lb lifting limit from urgent care
+- 2026-03-09: HR said no light duty, told client to use PTO
+- 2026-03-16: written complaint that the shift lead mocked the injury
+- 2026-03-20: terminated for "attendance"; prior reviews "meets expectations"
+- Overtime for about 6 months reportedly paid at straight time
+## Practice areas that may apply
+- Workers' Compensation: the back injury
+- Employment Law: retaliation, accommodation, wrongful termination
+- Wage and hour: overtime
+## Documents to request
+- Urgent care note, HR emails, pay stubs, termination letter
+- Attendance records and performance reviews
+## Questions for the consultation
+- Was a workers' comp claim form provided or filed?
+- Any absences before the injury?
+- Who witnessed the mocking?`,
+};
+
+function offlineMatch(question){
+  const q = ' ' + String(question || '').toLowerCase() + ' ';
+  const pools = [[(curArea && OFFLINE[curArea.id]) || [], 1.5], [OFFLINE.general, 1.1], ...AREAS.filter(a => !curArea || a.id !== curArea.id).map(a => [OFFLINE[a.id], 1])];
+  let best = null, bestScore = 0;
+  for (const [pool, w] of pools) for (const e of pool){
+    if (e.q && e.q.toLowerCase() === q.trim()) return e;
+    const score = e.keys.reduce((s, k) => s + (q.includes(k) ? (k.length > 6 ? 2 : 1) : 0), 0) * w;
+    if (score > bestScore){ best = e; bestScore = score; }
+  }
+  return bestScore >= 1 ? best : null;
+}
+function offlineResult(question, tool){
+  if (tool){
+    const T = TOOLS[tool];
+    const own = files.filter(f => !f.sample);
+    const notice = { spec:{ kind:'cards', title:'Your own files need live AI', color:RED, items:[{ label:'Not analyzed here', note: own.map(f => f.name).slice(0, 2).join(', ').slice(0, 80) || 'Your attached files' }, { label:'Open in Claude', note:'Live document analysis runs there' }, { label:'Or call the firm', note:'(844) 777-7777' }] }, line:'Reading your own documents needs live AI, which runs when this page is opened in Claude.' };
+    if (!files.some(f => f.sample)){
+      return { text:'Offline mode cannot read your own documents. Live document analysis runs when this page is opened in Claude. You can re-add the fictional sample case to see how the tools work.', list:[notice] };
+    }
+    const d = SAMPLE_TOOLS[tool];
+    const list = T.plain ? memoScenes(d) : T.scenes(d).filter(s => s.spec.items === undefined || s.spec.items.length);
+    const text = (own.length ? 'Showing results for the fictional sample case only. Your own files need live AI.\n\n' : 'Prepared result for the fictional sample case (Exhibit A).\n\n') + (T.plain ? d : T.text(d));
+    return { text, list: own.length ? [notice, ...list] : list };
+  }
+  const hit = offlineMatch(question);
+  if (hit) return { text: hit.text + '\n\n' + OFF_NOTE, list: hit.scenes };
+  const a = curArea || AREAS[0];
+  return { text:`I do not have a prepared answer for that in offline mode. Here is what Younessi Law's site says about ${a.name}. Live answers to any question run when this page is opened in Claude, or call the firm at (844) 777-7777.`,
+    list:[{ spec:{ kind:'cards', title:'No prepared answer yet', color:RED, items:[{ label:'Try a suggestion', note:'The questions below the courtroom' }, { label:'Live answers', note:'Open this page in Claude' }, CALL] }, line:'I do not have a prepared answer for that, so here is the firm information.' }, ...areaScenes(a)] };
+}
+async function offlineAsk(question, tool){
+  const T = tool ? TOOLS[tool] : null;
+  if (T && !files.length){ setStatus('Attach a case file first, or re-add the fictional sample case from the suggestions.', true); return; }
+  logMsg('You', T ? `[${T.title}] ${curArea.name}` : question);
+  const p = logMsg('Counsel', 'Thinking…');
+  lockUI(true); speaking = 1; turnTo = tallView ? 0 : -0.35; $('#st3').classList.toggle('on', !!T);
+  await new Promise(r => setTimeout(r, 700));
+  const { text, list } = offlineResult(question, tool);
+  p.textContent = text;
+  lockUI(false); speaking = 0;
+  setScenes(list, { speak: voiceOn });
+  setStatus(`Offline demo: prepared answer in ${list.length} part${list.length > 1 ? 's' : ''}. Use ◀ ▶ to step through them. Live AI runs when this page is opened in Claude.`);
+  setTimeout(() => { if (!busy) turnTo = curArea && !tallView ? -0.2 : 0; }, 1200);
+}
+
+/* ------------------------------------------------------------------ */
 /* Courtroom: plaques, answer placement, exhibits                      */
 /* ------------------------------------------------------------------ */
 court.scene.traverse(o => { if (o.isLight) o.layers.enable(1); });
@@ -1890,7 +2115,7 @@ court.el.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.
 /* ------------------------------------------------------------------ */
 /* AI                                                                  */
 /* ------------------------------------------------------------------ */
-let sample = null, imagesOK = false, ctl = null;
+let sample = null, imagesOK = false, ctl = null, aiMode = 'server';
 const turns = [];
 function setStatus(t, err=false){ const s = $('#status'); s.textContent = t; s.classList.toggle('err', err); }
 function logMsg(who, text){
@@ -2003,10 +2228,7 @@ async function ensureArea(){ if (!curArea){ selectArea(AREAS[0]); setStatus('No 
 async function ask(question, tool){
   if (busy){ ctl?.abort(); return; }
   await ensureArea(); stopVoice();
-  if (!sample){
-    setScenes(areaScenes(curArea));
-    setStatus('Live AI answers need this page open in Claude. Showing what the firm\'s site says instead.', true); return;
-  }
+  if (!sample || aiMode === 'offline') return offlineAsk(question, tool);
   const T = tool ? TOOLS[tool] : null;
   if (T && !files.length){ setStatus('Attach at least one case file first, or re-add the sample from the suggestions.', true); return; }
   logMsg('You', T ? `[${T.title}] ${curArea.name}` : question);
@@ -2038,6 +2260,11 @@ async function ask(question, tool){
     setStatus(`${list.length} part${list.length > 1 ? 's' : ''} ready beside counsel. Use ◀ ▶ to step through them.`);
   } catch (e) {
     lockUI(false);
+    if (e?.code === 'server_unreachable' && aiMode === 'server'){
+      aiMode = 'offline';
+      const log = $('#log'); for (let k = 0; k < 2 && log.lastElementChild; k++) log.lastElementChild.remove();
+      speaking = 0; return offlineAsk(question, tool);
+    }
     if (e?.code === 'cancelled'){ p.textContent = '(stopped)'; setStatus('Stopped.'); setScenes(areaScenes(curArea)); }
     else {
       p.textContent = errCopy(e); setStatus(errCopy(e), true); setScenes(areaScenes(curArea));
@@ -2307,7 +2534,7 @@ function serverSampler(){
     sample = window.claude?.use ? await window.claude.use('sample') : null;
     if (sample){ const lim = await sample.limits().catch(() => null); imagesOK = !!lim?.images; }
   } catch { sample = null; }
-  if (!sample){ sample = serverSampler(); imagesOK = false; }
+  if (sample) aiMode = 'claude'; else { sample = serverSampler(); imagesOK = false; aiMode = 'server'; }
 })();
 </script>
 </body></html>
