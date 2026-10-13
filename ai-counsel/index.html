@@ -175,7 +175,7 @@ footer{padding-block:28px;color:var(--muted);font-size:12.5px}
     </nav>
   </div>
 </header>
-<div class="notice"><div class="wrap"><span><b>Concept demo</b> built by Zaid Kamil for the Senior AI Systems Engineer, On-Premise AI application.</span><span>Not affiliated with or endorsed by Younessi Law. Answers are general information, not legal advice, and do not create an attorney-client relationship.</span></div></div>
+<div class="notice"><div class="wrap"><span><b>Concept demo</b> built by Zaid Kamil for the Software Engineer application.</span><span>Not affiliated with or endorsed by Younessi Law. Answers are general information, not legal advice, and do not create an attorney-client relationship.</span></div></div>
 
 <main>
 <section class="stage" id="courtroom" aria-label="3D courtroom">
@@ -1822,9 +1822,9 @@ const OFFLINE = {
     { keys:['history','how long','years','experience','founded','ramin','who runs'], text:'Younessi Law advertises 32 years of excellence. The firm is led by founder Ramin Younessi and has helped disaster victims since the 1994 Northridge earthquake.',
       scenes:[ S('overview', 'About the firm', [{ label:'Experience', value:'32 years' }, { label:'Founder', value:'Ramin Younessi' }, { label:'Since', value:'1994 Northridge' }], 'Younessi Law advertises 32 years of excellence.', { mark:'YL', tagline:'Supporting the working class in Los Angeles' }) ] },
     { q:'Who built this demo and why?', keys:['who built','who made','built this','zaid','demo','why should','hire','engineer','candidate'],
-      text:'Zaid Kamil built this concept demo for his application to the Senior AI Systems Engineer, On-Premise AI role. It is not affiliated with Younessi Law.',
+      text:'Zaid Kamil built this concept demo for his Software Engineer application. It is not affiliated with Younessi Law.',
       scenes:[
-        S('overview', 'Zaid Kamil', [{ label:'Based in', value:'Los Angeles' }, { label:'Experience', value:'6+ years' }, { label:'Degree', value:'M.S. CS, 3.90' }], 'Zaid Kamil built this demo for the Senior AI Systems Engineer role.', { mark:'ZK', tagline:'On-premise AI, GPU systems, and Linux administration' }),
+        S('overview', 'Zaid Kamil', [{ label:'Based in', value:'Los Angeles' }, { label:'Experience', value:'6+ years' }, { label:'Degree', value:'M.S. CS, 3.90' }], 'Zaid Kamil built this demo for the Software Engineer role.', { mark:'ZK', tagline:'On-premise AI, GPU systems, and Linux administration' }),
         S('cards', 'Why he fits', [{ label:'On-prem AI', note:'GPU 3D reconstruction at Dinex' }, { label:'Sysadmin', note:'Linux and 150+ endpoints at Cal State' }, { label:'Security', note:'Least privilege, backups, hardening' }, { label:'Local LLMs', note:'RAG avatar on RTX 5090 servers' }], 'He has run on-prem GPU work, Linux servers, and local AI.') ] },
   ],
 };
@@ -2439,7 +2439,7 @@ const entab = new THREE.Mesh(new THREE.BoxGeometry(FW + 0.3, 0.42, 1.1), stone);
 {
   const cv = document.createElement('canvas'); cv.width = 2048; cv.height = 128; const x = cv.getContext('2d');
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
-  const draw = () => { x.fillStyle = '#f4f0ea'; x.fillRect(0,0,2048,128); x.fillStyle = RED; x.font = '800 66px ' + FD; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('ZAID KAMIL  ·  SENIOR AI SYSTEMS ENGINEER', 1024, 68); tex.needsUpdate = true; };
+  const draw = () => { x.fillStyle = '#f4f0ea'; x.fillRect(0,0,2048,128); x.fillStyle = RED; x.font = '800 66px ' + FD; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('ZAID KAMIL  ·  SOFTWARE ENGINEER', 1024, 68); tex.needsUpdate = true; };
   draw(); fontsReady.then(draw);
   const frieze = new THREE.Mesh(new THREE.PlaneGeometry(FW + 0.3, 0.3), new THREE.MeshStandardMaterial({ map:tex, roughness:.8 })); frieze.position.set(0, colTop + 0.21, 0.552); facade.add(frieze);
   const shape = new THREE.Shape(); shape.moveTo(-(FW+0.5)/2, 0); shape.lineTo((FW+0.5)/2, 0); shape.lineTo(0, 0.95); shape.closePath();
